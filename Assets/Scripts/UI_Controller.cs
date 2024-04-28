@@ -8,10 +8,18 @@ public class UI_Controller : MonoBehaviour
 {
     public static event Action<string, double> OnInputFieldValueChanged;
     public static event Action OnSimulationStarted;
+    [SerializeField] private SimulationController simulationController;
     [SerializeField] private TMP_InputField b_0_InputResult;
     [SerializeField] private TMP_InputField r_1_InputResult;
     [SerializeField] private TMP_InputField r_2_InputResult;
     [SerializeField] private TMP_InputField gammaInputResult;
+
+    [SerializeField] private TMP_InputField n_1_InputResult;
+    [SerializeField] private TextMeshProUGUI n_1_Placeholder;
+    [SerializeField] private TMP_InputField n_2_InputResult;
+    [SerializeField] private TextMeshProUGUI n_2_Placeholder;
+    [SerializeField] private TMP_InputField H_InputResult;
+    [SerializeField] private TextMeshProUGUI H_Placeholder;
 
     [SerializeField] private Button startSimulationButton;
     [SerializeField] private Button resetButton;
@@ -34,6 +42,10 @@ public class UI_Controller : MonoBehaviour
         r_2_InputResult.onValueChanged.AddListener(OnResultChanged_r_2);
         gammaInputResult.onValueChanged.AddListener(OnResultChanged_gamma);
 
+        n_1_InputResult.onValueChanged.AddListener(OnResultChanged_n_1);
+        n_2_InputResult.onValueChanged.AddListener(OnResultChanged_n_2);
+        H_InputResult.onValueChanged.AddListener(OnResultChanged_H);
+
         startSimulationButton.onClick.AddListener(OnStartSimulationButtonPressed);
         resetButton.onClick.AddListener(OnResetButtonPressed);
         exitButton.onClick.AddListener(ExitApp);
@@ -46,8 +58,11 @@ public class UI_Controller : MonoBehaviour
         SimulationController.OnInvalidDoubleValues += ShowNotif;
 
         ScaleUp();
-    }
 
+        n_1_Placeholder.text = "По умолчанию:\n" + simulationController.n1.ToString();
+        n_2_Placeholder.text = "По умолчанию:\n" + simulationController.n2.ToString();
+        H_Placeholder.text = "По умолчанию:\n" + simulationController.H.ToString();
+    }
 
     private void OnDestroy()
     {
@@ -115,6 +130,30 @@ public class UI_Controller : MonoBehaviour
         }
     }
 
+    private void OnResultChanged_H(string value)
+    {
+        if (double.TryParse(value, out double result))
+        {
+            OnInputFieldValueChanged?.Invoke("H", result);
+        }
+    }
+
+    private void OnResultChanged_n_2(string value)
+    {
+        if (double.TryParse(value, out double result))
+        {
+            OnInputFieldValueChanged?.Invoke("n2", result);
+        }
+    }
+
+    private void OnResultChanged_n_1(string value)
+    {
+        if (double.TryParse(value, out double result))
+        {
+            OnInputFieldValueChanged?.Invoke("n1", result);
+        }
+    }
+
 
     private void ScaleUp()
     {
@@ -159,6 +198,20 @@ public class UI_Controller : MonoBehaviour
         gammaInputResult.text = "";
 
         drawnCircles.Clear();
+
+        simulationController.RestoreDefaults();
+        SetPlaceholdersToDefault();
+    }
+
+    private void SetPlaceholdersToDefault()
+    {
+        n_1_Placeholder.text = "По умолчанию:\n" + simulationController.n1.ToString();
+        n_2_Placeholder.text = "По умолчанию:\n" + simulationController.n2.ToString();
+        H_Placeholder.text = "По умолчанию:\n" + simulationController.H.ToString();
+
+        n_1_InputResult.text = "";
+        n_2_InputResult.text = "";
+        H_InputResult.text = "";
     }
 
     private void ExitApp()

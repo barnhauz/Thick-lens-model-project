@@ -8,6 +8,12 @@ public class SimulationController : MonoBehaviour
     public static event Action<string> OnInvalidDoubleValues;
 
     private double b_0, r_1, r_2, gamma;
+    public double n1 { get; private set; } = 1.00029; //показатель преломления воздуха
+    private double n1_default = 1.00029;
+    public double n2 { get; private set; } = 1.52; //показатель преломления стекла
+    private double n2_default = 1.52;
+    public double H { get; private set; } = 20; //высота линзы, нужно для рассчетов центра R2 и точки перечечения R1 м R2
+    private double H_default = 20;
 
     [SerializeField] private DrawingController drawingController;
     private Vector3[] firstLinePositions, secondLinePositions, thirdLinePositions;
@@ -43,20 +49,32 @@ public class SimulationController : MonoBehaviour
             case "gamma":
                 gamma = value;
                 break;
+            case "n1":
+                n1 = value;
+                break;
+            case "n2":
+                n2 = value;
+                break;
+            case "H":
+                H = value;
+                break;
         }
+    }
+
+    public void RestoreDefaults()
+    {
+        n1 = n1_default;
+        n2 = n2_default;
+        H = H_default;
     }
 
     private bool TryCalculateSimulation()
     {
-        double _n1 = 1.00029; //показатель преломления воздуха
-        double _n2 = 1.52; //показатель преломления стекла
-        double _H = 20; //высота линзы, нужно для рассчетов центра R2 и точки перечечения R1 м R2
-
         double _l = 20.0; //фиксированное расстояние, на котором первый радиус кривизны пересекает ось X
         double _xR1 = _l + r_1; //координата по оси X центра окружности R1, точка [xR1, 0]
 
-        double _xH = (2 * _xR1 - Math.Sqrt(4 * _xR1 * _xR1 - 4 * (_H * _H - r_1 * r_1 + _xR1 * _xR1))) / 2; //координаты пересечения R1 и R2
-        double _xR2 = _xH - Math.Sqrt(r_2 * r_2 - _H * _H); //координата центра R2
+        double _xH = (2 * _xR1 - Math.Sqrt(4 * _xR1 * _xR1 - 4 * (H * H - r_1 * r_1 + _xR1 * _xR1))) / 2; //координаты пересечения R1 и R2
+        double _xR2 = _xH - Math.Sqrt(r_2 * r_2 - H * H); //координата центра R2
 
         double _A = Math.Tan(gamma * (Math.PI / 180.0)) * Math.Tan(gamma * (Math.PI / 180.0)) + 1.0; //первая константа для вычисления
         double _B = 2.0 * Math.Tan(gamma * (Math.PI / 180.0)) * b_0 - 2.0 * _xR1; //вторая константа для вычисления
@@ -77,7 +95,7 @@ public class SimulationController : MonoBehaviour
         }
         //итого получили вторую точку с координатами [x1, y1]
 
-        double _beta = Math.Asin((_n1 / _n2) * Math.Sin(gamma * (Math.PI / 180.0) - Math.Atan(_y1 / (_xR1 - _x1)))); //угол преломления, используем для прямой света внутри линзы
+        double _beta = Math.Asin((n1 / n2) * Math.Sin(gamma * (Math.PI / 180.0) - Math.Atan(_y1 / (_xR1 - _x1)))); //угол преломления, используем для прямой света внутри линзы
 
         double _AA = Math.Tan(_beta) * Math.Tan(_beta) + 1.0;
         double _BB = 2.0 * Math.Tan(_beta) * _y1 - 2.0 * _xR2;
@@ -98,11 +116,11 @@ public class SimulationController : MonoBehaviour
         }
         //итого точка пересечения прямой внутри линзы и R2 [x2, y2]
 
-        double _alfa = Math.Asin((_n2 / _n1) * Math.Sin(_beta - Math.Atan(_y2 / (_x2 - _xR2)))); //угол, под которым выходит прямая из линзы.
+        double _alfa = Math.Asin((n2 / n1) * Math.Sin(_beta - Math.Atan(_y2 / (_x2 - _xR2)))); //угол, под которым выходит прямая из линзы.
         double _x3 = _xR1 + r_1 + 20;//координата точки пересечения выходной прямой с Oy [x3, 0]
         double _y3 = Math.Tan(_alfa) * _x3;
 
-        double _teta = Math.Atan(_H / (_xH - _xR2)) * 180.0 / Math.PI; //угол, под которым пересекаются R1 и R2 относительно центра R2, для построения дуги        
+        double _teta = Math.Atan(H / (_xH - _xR2)) * 180.0 / Math.PI; //угол, под которым пересекаются R1 и R2 относительно центра R2, для построения дуги        
 
         firstLinePositions = new Vector3[]
         {
@@ -133,7 +151,7 @@ public class SimulationController : MonoBehaviour
         List<double> _variablesToCheck = new List<double>() { _xR1, _xH, _xR2, _A, _B, _C, _x1_var1, _x1_var2, _x1, _y1, _beta, _AA, _BB, _CC, _x2_var1, _x2_var2, _x2, _y2, _alfa, _x3, _y3, _teta };
 
         if (!AreDoubleValuesValid(_variablesToCheck)) return false;
-        else if (firstLinePositions[1].y > 20f || firstLinePositions[1].y < -20f) return false;
+        else if (firstLinePositions[1].y > H || firstLinePositions[1].y < -H) return false;
         else return true;
     }
 
