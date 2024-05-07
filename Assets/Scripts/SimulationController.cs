@@ -94,31 +94,31 @@ public class SimulationController : MonoBehaviour
             _x1 = _x1_var2;
         }
         //итого получили вторую точку с координатами [x1, y1]
-
-        double _beta = Math.Asin((n1 / n2) * Math.Sin(gamma * (Math.PI / 180.0) - Math.Atan(_y1 / (_xR1 - _x1)))); //угол преломления, используем для прямой света внутри линзы
+        //-9,17 градусы
+        double _beta = -(Math.Asin((n1 / n2) * Math.Sin(gamma * (Math.PI / 180.0) - Math.Atan(_y1 / (_xR1 - _x1)))) + Math.Atan(_y1/(_xR1-_x1))); //угол преломления, используем для прямой света внутри линзы
 
         double _AA = Math.Tan(_beta) * Math.Tan(_beta) + 1.0;
-        double _BB = 2.0 * Math.Tan(_beta) * _y1 - 2.0 * _xR2;
-        double _CC = _xR2 * _xR2 + _y1 * _y1 - r_2 * r_2;
+        double _BB = 2.0 * Math.Tan(_beta) * (_y1 - Math.Tan(_beta)*_x1) - 2.0 * _xR2;
+        double _CC = _xR2 * _xR2 + (_y1 - Math.Tan(_beta) * _x1)* (_y1 - Math.Tan(_beta) * _x1) - r_2 * r_2;
         double _x2_var1 = (-_BB + Math.Sqrt(_BB * _BB - 4.0 * _AA * _CC)) / (2.0 * _AA);
         double _x2_var2 = (-_BB - Math.Sqrt(_BB * _BB - 4.0 * _AA * _CC)) / (2.0 * _AA);
 
         double _x2, _y2; //ищем координаты пересечения прямой внутри линзы с R2
         if (_x2_var1 > _x2_var2)
         {
-            _y2 = Math.Tan(_beta) * _x2_var1 + _y1;
+            _y2 = Math.Tan(_beta) * _x2_var1 + (_y1 - Math.Tan(_beta) * _x1);
             _x2 = _x2_var1;
         }
         else
         {
-            _y2 = Math.Tan(_beta) * _x2_var2 + _y1;
+            _y2 = Math.Tan(_beta) * _x2_var2 + (_y1 - Math.Tan(_beta) * _x1);
             _x2 = _x2_var2;
         }
         //итого точка пересечения прямой внутри линзы и R2 [x2, y2]
-
-        double _alfa = Math.Asin((n2 / n1) * Math.Sin(_beta - Math.Atan(_y2 / (_x2 - _xR2)))); //угол, под которым выходит прямая из линзы.
-        double _x3 = _xR1 + r_1 + 20;//координата точки пересечения выходной прямой с Oy [x3, 0]
-        double _y3 = Math.Tan(_alfa) * _x3;
+        double _ABC = Math.Asin((n2 / n1) * Math.Sin(-_beta  + Math.Atan(_y2 / (_x2 - _xR2)))); // угол преломления от радиуса 2
+        double _alfa =-(_ABC - Math.Atan(_y2/(_x2-_xR2))); //угол, под которым выходит прямая из линзы, отложенный от горизонтали
+        double _x3 = _xR1 + r_1 + 20;//координата случайной точки справа для построения
+        double _y3 = Math.Tan(_alfa) * _x3 + _y2 - Math.Tan(_alfa)*_x2;
 
         double _teta = Math.Atan(H / (_xH - _xR2)) * 180.0 / Math.PI; //угол, под которым пересекаются R1 и R2 относительно центра R2, для построения дуги        
 
@@ -180,10 +180,10 @@ public class SimulationController : MonoBehaviour
         drawingController.DrawLine(firstLinePositions, "Line_1", 0.15f, Color.yellow, 1, out DrawnObject line_1);
         while (!line_1.IsDrawn) yield return null;
 
-        drawingController.DrawLine(secondLinePositions, "Line_2", 0.15f, Color.yellow, 1, out DrawnObject line_2);
+        drawingController.DrawLine(secondLinePositions, "Line_2", 0.15f, Color.green, 1, out DrawnObject line_2);
         while (!line_2.IsDrawn) yield return null;
 
-        drawingController.DrawLine(thirdLinePositions, "Line_3", 0.15f, Color.yellow, 1, out DrawnObject line_3);
+        drawingController.DrawLine(thirdLinePositions, "Line_3", 0.15f, Color.red, 1, out DrawnObject line_3);
     }
 
     private bool AreDoubleValuesValid(List<double> values)
